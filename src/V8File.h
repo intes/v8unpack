@@ -93,7 +93,7 @@ public:
 		DWORD next_page_addr;
 		DWORD page_size;
 		DWORD storage_ver;
-		DWORD reserved; // РІСЃРµРіРґР° 0x00000000 ?
+		DWORD reserved; // всегда 0x00000000 ?
 
 		static const UINT Size()
 		{
@@ -105,7 +105,7 @@ public:
 	{
 		DWORD elem_header_addr;
 		DWORD elem_data_addr;
-		DWORD fffffff; //РІСЃРµРіРґР° 0x7fffffff ?
+		DWORD fffffff; //всегда 0x7fffffff ?
 
 		static const UINT Size()
 		{
@@ -144,7 +144,8 @@ public:
 	int LoadFile(char *pFileData, ULONG FileData, bool boolInflate = true, bool UnpackWhenNeed = false);
 	int UnpackToDirectoryNoLoad(const std::string &directory, std::basic_ifstream<char> &file, ULONG FileData, bool boolInflate = true, bool UnpackWhenNeed = false);
 
-	int UnpackToFolder(const std::string &filename, const std::string &dirname, char *block_name = NULL, bool print_progress = false);
+	int UnpackToFolder(const std::string &filename, const std::string &dirname, const std::string &block_name, bool print_progress = false);
+	int ListFiles(const std::string &filename, const std::string &root);
 
 	static DWORD _httoi(const char *value);
 
@@ -185,9 +186,9 @@ public:
 	{
 		ULONGLONG date_creation;
 		ULONGLONG date_modification;
-		DWORD res; // РІСЃРµРіРґР° 0x000000?
-		//РёР·РјРµРЅСЏРµРјР°СЏ РґР»РёРЅР° РёРјРµРЅРё Р±Р»РѕРєР°
-		//РїРѕСЃР»Рµ РёРјРµРЅРё DWORD res; // РІСЃРµРіРґР° 0x000000?
+		DWORD res; // всегда 0x000000?
+		//изменяемая длина имени блока
+		//после имени DWORD res; // всегда 0x000000?
 		static const UINT Size()
 		{
 			return 8 + 8 + 4;
@@ -198,9 +199,9 @@ public:
 	CV8Elem();
 	~CV8Elem();
 
-	char	           *pHeader; // TODO: РЈС‚РµС‡РєР° РїР°РјСЏС‚Рё
+	char	           *pHeader; // TODO: Утечка памяти
 	UINT	            HeaderSize;
-	char	           *pData; // TODO: РЈС‚РµС‡РєР° РїР°РјСЏС‚Рё
+	char	           *pData; // TODO: Утечка памяти
 	UINT	            DataSize;
 	CV8File             UnpackedData;
 	bool	            IsV8File;

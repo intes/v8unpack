@@ -707,7 +707,69 @@ int CV8File::UnpackToDirectoryNoLoad(const std::string &directory, std::basic_if
     return ret;
 }
 
-int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &dirname, char *UnpackElemWithName, bool print_progress)
+int CV8File::ListFiles(const std::string &filename, const std::string &root)
+{
+    boost::filesystem::ifstream file(filename, std::ios_base::binary);
+
+    file.read((char*)&FileHeader, sizeof(FileHeader));
+
+    stBlockHeader BlockHeader;
+    stBlockHeader *pBlockHeader = &BlockHeader;
+
+    file.read((char*)&BlockHeader, sizeof(BlockHeader));
+
+    UINT ElemsAddrsSize;
+    stElemAddr *pElemsAddrs = NULL;
+    ReadBlockData(file, pBlockHeader, (char*&)pElemsAddrs, &ElemsAddrsSize);
+
+    unsigned int ElemsNum = ElemsAddrsSize / stElemAddr::Size();
+
+    Elems.clear();
+
+    int ret = 0;
+
+    for (UINT i = 0; i < ElemsNum; i++) {
+
+        if (pElemsAddrs[i].fffffff != V8_FF_SIGNATURE) {
+            ElemsNum = i;
+            break;
+        }
+
+        file.seekg(pElemsAddrs[i].elem_header_addr, std::ios_base::beg);
+        file.read((char*)&BlockHeader, sizeof(BlockHeader));
+
+        if (pBlockHeader->EOL_0D != 0x0d ||
+                pBlockHeader->EOL_0A != 0x0a ||
+                pBlockHeader->space1 != 0x20 ||
+                pBlockHeader->space2 != 0x20 ||
+                pBlockHeader->space3 != 0x20 ||
+                pBlockHeader->EOL2_0D != 0x0d ||
+                pBlockHeader->EOL2_0A != 0x0a) {
+
+            ret = V8UNPACK_HEADER_ELEM_NOT_CORRECT;
+            break;
+        }
+
+        CV8Elem elem;
+        ReadBlockData(file, pBlockHeader, elem.pHeader, &elem.HeaderSize);
+
+        char ElemName[512];
+        UINT ElemNameLen;
+
+        GetElemName(elem, ElemName, &ElemNameLen);
+
+        std::cout << ElemName << std::endl;
+
+		delete [] elem.pHeader;
+
+    }
+
+	delete [] pElemsAddrs;
+
+    return ret;
+}
+
+int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &dirname, const std::string &UnpackElemWithName, bool print_progress)
 {
     char *pFileData = NULL;
 
@@ -791,7 +853,7 @@ int CV8File::UnpackToFolder(const std::string &filename_in, const std::string &d
         GetElemName(*elem, ElemName, &ElemNameLen);
 
         // если передано имя блока для распаковки, пропускаем все остальные
-        if (UnpackElemWithName && strcmp(UnpackElemWithName, ElemName))
+        if (UnpackElemWithName.size() != 0 && strcmp(UnpackElemWithName.c_str(), ElemName))
             continue;
 
         filename_out = dirname;

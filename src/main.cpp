@@ -17,7 +17,7 @@ void usage()
 	cout << "Unpack, pack, deflate and inflate 1C v8 file (*.cf)" << endl;
 	cout << endl;
 	cout << "V8UNPACK" << endl;
-	cout << "  -U[NPACK]     in_filename.cf     out_dirname" << endl;
+	cout << "  -U[NPACK]     in_filename.cf     out_dirname      [entry-name]" << endl;
 	cout << "  -PA[CK]       in_dirname         out_filename.cf" << endl;
 	cout << "  -I[NFLATE]    in_filename.data   out_filename" << endl;
 	cout << "  -D[EFLATE]    in_filename        filename.data" << endl;
@@ -25,6 +25,7 @@ void usage()
 	cout << "  -BAT" << endl;
 	cout << "  -P[ARSE]      in_filename        out_dirname" << endl;
 	cout << "  -B[UILD]      in_dirname         out_filename" << endl;
+	cout << "  -L[IST]       in_filename.cf     [list-in-file]" << endl;
 	cout << "  -V[ERSION]" << endl;
 }
 
@@ -72,7 +73,11 @@ int main(int argc, char* argv[])
 	if (cur_mode == "-unpack" || cur_mode == "-u" || cur_mode == "-unp") {
 
 		CV8File V8File;
-		ret = V8File.UnpackToFolder(std::string(argv[2]), std::string(argv[3]), argv[4], true);
+		string file_to_search;
+		if (argc > 4) {
+			file_to_search = argv[4];
+		}
+		ret = V8File.UnpackToFolder(std::string(argv[2]), std::string(argv[3]), file_to_search, true);
 		return ret;
 	}
 
@@ -89,6 +94,18 @@ int main(int argc, char* argv[])
 		CV8File V8File;
 		ret = V8File.Parse(argv[2], argv[3]);
 		return ret;
+	}
+
+	if (cur_mode == "-list" || cur_mode == "-l") {
+		if (argc > 2) {
+			CV8File V8File;
+			std::string root;
+			if (argc == 4)
+				root = argv[3];
+
+			ret = V8File.ListFiles(argv[2], root);
+			return ret;
+		}
 	}
 
 	if (cur_mode == "-build" || cur_mode == "-b") {
